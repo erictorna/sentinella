@@ -1,0 +1,50 @@
+---
+title: "descriptiva"
+date: "2024-10-01"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+  pdf_document:
+    toc: yes
+---
+
+```{r libraries, include = FALSE}
+library(data.table)
+library(tidyverse)
+library(kableExtra)
+library(gridExtra)
+library(ggplot2)
+library(scales)
+library(knitr)
+library(haven)
+load('/home/idiap/projects/TFG_sentinella/dades.RData')
+```
+
+```{r, results='asis', warning=FALSE}
+# Eliminem les següents variables de la descriptiva ja sigui perquè no són informatives o perquè estan repetides però en forma de variable numèrica
+taula2 = taula %>% select(-CONSENT, -CODE, -CODE_F, -OSS1, -OSS2, -OSS3, -OSS1_F, -OSS3_F, -OSS2_F, -AUDIT1, -AUDIT2, -AUDIT3, -AUDIT1_F, -AUDIT3_F, -AUDIT2_F)
+for (variable in names(taula2)) {
+  df <- taula[[as.character(variable)]]
+  cat(sprintf("\n\n## %s \n\n", variable))
+  
+  # creem petita base de dades per poder posar el conteig a sobre de cada barra
+  plot_data <- data.frame(x = df) %>%
+    group_by(x) %>%
+    summarise(count = n())
+  
+  # Gràfic
+  plot <- ggplot(plot_data, aes(x = x, y = count)) +
+    geom_bar(stat = "identity", fill = "coral", color = "black") +
+    geom_text(aes(label = count), vjust = -0.5) +  # posa el valor total de cada categoria
+    labs(title = variable,
+         x = variable,
+         y = "N") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 35, hjust = 1, vjust = 0.5))  # Rotem els valors del eix de les X
+  
+  print(plot)
+  cat('\n \n \n')
+}
+
+```

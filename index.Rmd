@@ -1,0 +1,13 @@
+---
+title: "Index"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+---
+
+* Descriptives [[html]](descriptives.html)
+
+* Anàlisi pre-post sense ajustar[[html]](prepost.html)
+
+* Models[[html]](linear_regression.html)
