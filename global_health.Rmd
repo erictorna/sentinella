@@ -1,0 +1,68 @@
+---
+title: "global_health"
+date: "2024-10-01"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+  pdf_document:
+    toc: yes
+---
+
+```{r libraries, include = FALSE}
+library(data.table)
+library(tidyverse)
+library(ggplot2)
+library(ggpubr)
+library(knitr)
+library(MASS)
+load('/home/idiap/projects/TFG_sentinella/dades.RData')
+
+variables_test_num = c('Midtgaard_total_F', 'AUDIT_total_F', 'MAAS_score_F', 'PHQ_score_F', 'GAD_score_F', 'SMBM_mean_F', 'OSS_total_F')
+taula$PHQ_score_F<-taula$PHQ_score_S
+taula$GLOBAL_HEALTH_F<-taula$`GLOBAL HEALTH_F`
+taula = taula %>% mutate(GLOBAL_HEALTH_F = ifelse(GLOBAL_HEALTH_F=='Excelente', 5, 
+                                                ifelse(GLOBAL_HEALTH_F=='Bastente buena', 4, 
+                                                       ifelse(GLOBAL_HEALTH_F=='Buena', 3, 
+                                                              ifelse(GLOBAL_HEALTH_F=='Regular', 2,
+                                                                     ifelse(GLOBAL_HEALTH_F=='Mala', 1, NA))))))
+
+```
+
+```{r correlcions, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+for (i in variables_test_num) {
+  cat(sprintf("\n\n## %s \n\n", i))
+  
+  
+  print(
+    ggscatter(taula, x = 'GLOBAL_HEALTH_F', y = i,  cor.coef = TRUE, cor.method = "kendall") +
+  # geom_point() +
+  geom_smooth(method = lm, na.rm = TRUE, fullrange = TRUE, aes(group = 1), colour = "black") +
+  labs(x = "Global_health", y = sprintf('resultat %s ', i)) +
+  theme_minimal())
+}
+```
+
+# Ordinal logistic model
+
+```{r}
+taula2 = taula[!is.na(Midtgaard_total_F) & !is.na(AUDIT_total_F) & !is.na(MAAS_score_F) & !is.na(PHQ_score_F) & !is.na(GAD_score_F) & !is.na(SMBM_mean_F) & !is.na(GLOBAL_HEALTH_F) & !is.na(OSS_total_F)]
+print(length(taula2[[1]]))
+# Ensure that global_health is an ordered factor
+taula2$GLOBAL_HEALTH_F <- factor(taula2$GLOBAL_HEALTH_F, ordered = TRUE)
+
+# Build the formula as a character string
+formula_string <- paste("GLOBAL_HEALTH_F ~", paste(variables_test_num, collapse = " + "))
+
+# Convert the formula string to an actual formula object
+formula_object <- as.formula(formula_string)
+
+# Fit the ordinal logistic regression model
+model <- polr(formula_object, data = taula2, method = "logistic")
+
+# View the summary of the model
+summary(model)
+
+stepAIC(model, direction = "both")
+```
+

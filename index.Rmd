@@ -11,3 +11,9 @@ output:
 * Anàlisi pre-post sense ajustar[[html]](prepost.html)
 
 * Models[[html]](linear_regression.html)
+
+* Matching[[html]](matching.html)
+
+* Efecte Sentinella[[html]](accio_sentinella.html)
+
+* Correlacions salut global[[html]](global_health.html)

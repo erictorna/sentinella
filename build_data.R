@@ -53,33 +53,3 @@ taula = taula %>% mutate(SMBM_mean = ifelse(!is.na(SMBM1) & !is.na(SMBM2) & !is.
                                                      as.numeric(SMBM12) + as.numeric(SMBM13) + as.numeric(SMBM14))/14,2 ),NA))
 
 save(taula, file = '~/idiap/projects/TFG_sentinella/dades.RData')
-# taula = taula %>% mutate(Midtgaard1 = ifelse(Midtgaard1=='No', 0, 1)) %>% 
-#   mutate(Midtgaard2 = ifelse(Midtgaard2=='No', 0, 1)) %>% 
-#   mutate(Midtgaard3 = ifelse(Midtgaard3=='No', 0, 1)) %>% 
-#   mutate(Midtgaard4 = ifelse(Midtgaard4=='No', 0, 1)) %>% 
-#   mutate(Midtgaard5 = ifelse(Midtgaard5=='No', 0, 1)) %>% 
-#   mutate(Midtgaard6 = ifelse(Midtgaard6=='No', 0, 1)) %>% 
-#   mutate(Midtgaard7 = ifelse(Midtgaard7=='No', 0, 1)) %>% 
-#   mutate(Midtgaard8 = ifelse(Midtgaard8=='No', 0, 1)) %>% 
-#   mutate(Midtgaard9 = ifelse(Midtgaard9=='No', 0, 1)) %>% 
-#   mutate(Midtgaard10 = ifelse(Midtgaard10=='No', 0, 1)) %>% 
-#   mutate(Midtgaard11 = ifelse(Midtgaard11=='No', 0, 1)) %>% 
-#   mutate(Midtgaard12 = ifelse(Midtgaard12=='No', 0, 1)) %>% 
-#   mutate(Midtgaard13 = ifelse(Midtgaard13=='No', 0, 1)) %>% 
-#   # mutate(Midtgaard14 = ifelse(Midtgaard14=='No', 0, 1)) %>% aquesta variable no està ben categoritzada
-#   mutate(Midtgaard_total = Midtgaard1 + Midtgaard2 + Midtgaard3 + Midtgaard4 + Midtgaard5 + Midtgaard6 + Midtgaard7 + Midtgaard8 + Midtgaard8 +
-#                            Midtgaard10 + Midtgaard11 + Midtgaard12 + Midtgaard13)
-# 
-# taula = taula %>% mutate(Midtgaard1_F = ifelse(Midtgaard1_F=='No', 0, 1)) %>% 
-#   mutate(Midtgaard2_F = ifelse(Midtgaard2_F=='No', 0, 1)) %>% 
-#   mutate(Midtgaard3_F = ifelse(Midtgaard3_F=='No', 0, 1)) %>% 
-#   mutate(Midtgaard4_F = ifelse(Midtgaard4_F=='No', 0, 1)) %>% 
-#   mutate(Midtgaard5_F = ifelse(Midtgaard5_F=='No', 0, 1)) %>% 
-#   mutate(Midtgaard6_F = ifelse(Midtgaard6_F=='No', 0, 1)) %>% 
-#   mutate(Midtgaard7_F = ifelse(Midtgaard7_F=='No', 0, 1)) %>% 
-#   mutate(Midtgaard8_F = ifelse(Midtgaard8_F=='No', 0, 1)) %>% 
-#   mutate(Midtgaard9_F = ifelse(Midtgaard9_F=='No', 0, 1)) %>% 
-#   mutate(Midtgaard10_F = ifelse(Midtgaard10_F=='No', 0, 1)) %>% 
-#   mutate(Midtgaard11_F = ifelse(Midtgaard11_F=='No', 0, 1)) %>% 
-#   mutate(Midtgaard12_F = ifelse(Midtgaard12_F=='No', 0, 1)) %>% 
-#   mutate(Midtgaard13_F = ifelse(Midtgaard13_F=='No', 0, 1)) # Aqui tenim varios missings, així que no tinc clar que poguem fer la suma com en l'anterior, s'haura de mirar be com es fara la comparació pre post

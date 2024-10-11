@@ -1,0 +1,126 @@
+---
+title: "Matching"
+date: "2024-10-01"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+  pdf_document:
+    toc: yes
+---
+
+```{r libraries, include = FALSE}
+library(data.table)
+library(tidyverse)
+library(MatchIt)
+library(nnet)
+library(cobalt)
+knitr::opts_chunk$set(out.extra='style="font-size: 8px;"')
+load('/home/idiap/projects/TFG_sentinella/dades.RData')
+
+taula$PHQ_score_F<-taula$PHQ_score_S
+taula$GLOBAL_HEALTH<-taula$`GLOBAL HEALTH`
+taula$GLOBAL_HEALTH_F<-taula$`GLOBAL HEALTH_F`
+
+# variables_socia = c('SEX', 'SEXUAL ORIENTATION', 'LIVING SITUATION', 'RELATIONSHIP', 'EMPLOYMENT', 'FINANCING', 'CCAA', 
+                    # 'HEALTHCARE WORKING PARENTS', 'YEAR', 'PHSYCHIATRY', 'GLOBAL HEALTH')
+```
+
+```{r, warning=FALSE}
+# variables a ajuntar (provisionals)
+variables_socia = c('SEX', 'RELATIONSHIP', 'EMPLOYMENT', 'FINANCING', 'CCAA', 'YEAR', 'PHSYCHIATRY')
+
+# convertim aquestes variables en factors per si de cas alguna estigues com a numerica
+taula[, (variables_socia) := lapply(.SD, as.factor), .SDcols = variables_socia]
+
+# Eliminem la gent que té missings, ja que sinó no es pot produir el matching
+# 182 obs -> 163 obs
+taula_clean <- na.omit(taula, cols = variables_socia)
+
+# Fórmula del procés
+matching_formula <- as.formula(paste("SENTINEL ~", paste(variables_socia, collapse = " + ")))
+
+match_data <- matchit(matching_formula, data = taula_clean, method = "nearest", distance = "logit", ratio = 1)
+
+matched_data <- match.data(match_data)
+
+print(summary(match_data)$nn)
+
+```
+
+```{r, results='asis', warning=FALSE}
+love.plot(match_data, stat = "mean.diffs", abs = TRUE, threshold = 0.1)
+```
+
+```{r}
+variables_test_num = c('Midtgaard_total', 'AUDIT_total', 'MAAS_score', 'PHQ_score', 'GAD_score', 'SMBM_mean', 'OSS_total')
+```
+
+
+```{r}
+model_summaries <- list()
+
+for (var in variables_test_num) {
+  
+  # Define the pre and post variable names
+  pre_var <- var
+  post_var <- paste0(var, "_F")
+  
+  # Create the difference between post and pre
+  matched_data[, paste0(var, "_change") := get(post_var) - get(pre_var)]
+  
+  # Remove rows with NAs for the relevant variables
+  taula_clean <- matched_data[!is.na(get(pre_var)) & !is.na(get(post_var)) & !is.na(SENTINEL_F)]
+  
+  # Run the linear regression on the cleaned data
+  model <- lm(get(paste0(var, "_change")) ~ SENTINEL_F, data = taula_clean)
+  
+  # Store the summary of each model in the list, named by the variable
+  model_summaries[[var]] <- summary(model)
+  
+  # Print a short summary for each model
+  print(paste("Results for", var, ":"))
+  print(summary(model))
+  
+   cat('\n')
+  cat('--------------------------------------------------------')
+  cat('\n')
+  cat('\n')
+  cat('\n')
+  cat('\n')
+  cat('\n')
+  cat('\n')
+}
+```
+
+```{r, warning=FALSE}
+# Create a categorical change variable (e.g., 0 = no change, 1 = improvement, -1 = deterioration)
+matched_data = matched_data %>% mutate(GLOBAL_HEALTH = ifelse(GLOBAL_HEALTH=='Excelente', 5, 
+                                                ifelse(GLOBAL_HEALTH=='Bastente buena', 4, 
+                                                       ifelse(GLOBAL_HEALTH=='Buena', 3, 
+                                                              ifelse(GLOBAL_HEALTH=='Regular', 2,
+                                                                     ifelse(GLOBAL_HEALTH=='Mala', 1, NA))))))
+
+matched_data = matched_data %>% mutate(GLOBAL_HEALTH_F = ifelse(GLOBAL_HEALTH_F=='Excelente', 5, 
+                                                ifelse(GLOBAL_HEALTH_F=='Bastente buena', 4, 
+                                                       ifelse(GLOBAL_HEALTH_F=='Buena', 3, 
+                                                              ifelse(GLOBAL_HEALTH_F=='Regular', 2,
+                                                                     ifelse(GLOBAL_HEALTH_F=='Mala', 1, NA))))))
+
+matched_data[, global_health_change := fifelse(GLOBAL_HEALTH == GLOBAL_HEALTH_F, 0, 
+                                        fifelse(GLOBAL_HEALTH < GLOBAL_HEALTH_F, 1, -1))]
+matched_data[, global_health_change := factor(global_health_change, levels = c(0, -1, 1))]
+# Remove missing values
+taula_clean <- matched_data[!is.na(GLOBAL_HEALTH) & !is.na(GLOBAL_HEALTH_F) & !is.na(SENTINEL_F)]
+
+
+multinom_model_change <- multinom(global_health_change ~ SENTINEL_F, data = taula_clean)
+
+# Summary of the multinomial logistic model
+summary(multinom_model_change)
+
+# Get the odds ratios for the multinomial model
+exp(coef(multinom_model_change))
+
+matched_data[, .N, keyby=.(global_health_change, SENTINEL_F)]
+```

@@ -1,0 +1,97 @@
+---
+title: "Anàlisis"
+date: "2024-10-01"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+  pdf_document:
+    toc: yes
+---
+
+```{r libraries, include = FALSE}
+library(data.table)
+library(tidyverse)
+library(kableExtra)
+library(gridExtra)
+library(ggplot2)
+library(scales)
+library(knitr)
+library(nnet)
+library(haven)
+load('/home/idiap/projects/TFG_sentinella/dades.RData')
+
+variables_test_num = c('Midtgaard_total', 'AUDIT_total', 'MAAS_score', 'PHQ_score', 'GAD_score', 'SMBM_mean', 'OSS_total')
+taula$PHQ_score_F<-taula$PHQ_score_S
+taula$GLOBAL_HEALTH<-taula$`GLOBAL HEALTH`
+taula$GLOBAL_HEALTH_F<-taula$`GLOBAL HEALTH_F`
+
+```
+
+```{r}
+model_summaries <- list()
+
+for (var in variables_test_num) {
+  
+  # Define the pre and post variable names
+  pre_var <- var
+  post_var <- paste0(var, "_F")
+  
+  # Create the difference between post and pre
+  taula[, paste0(var, "_change") := get(post_var) - get(pre_var)]
+  
+  # Remove rows with NAs for the relevant variables
+  taula_clean <- taula[!is.na(get(pre_var)) & !is.na(get(post_var)) & !is.na(SENTINEL_F)]
+  
+  # Run the linear regression on the cleaned data
+  model <- lm(get(paste0(var, "_change")) ~ SENTINEL_F, data = taula_clean)
+  
+  # Store the summary of each model in the list, named by the variable
+  model_summaries[[var]] <- summary(model)
+  
+  # Print a short summary for each model
+  print(paste("Results for", var, ":"))
+  print(summary(model))
+  
+   cat('\n')
+  cat('--------------------------------------------------------')
+  cat('\n')
+  cat('\n')
+  cat('\n')
+  cat('\n')
+  cat('\n')
+  cat('\n')
+}
+```
+
+```{r, warning=FALSE}
+# Create a categorical change variable (e.g., 0 = no change, 1 = improvement, -1 = deterioration)
+taula = taula %>% mutate(GLOBAL_HEALTH = ifelse(GLOBAL_HEALTH=='Excelente', 5, 
+                                                ifelse(GLOBAL_HEALTH=='Bastente buena', 4, 
+                                                       ifelse(GLOBAL_HEALTH=='Buena', 3, 
+                                                              ifelse(GLOBAL_HEALTH=='Regular', 2,
+                                                                     ifelse(GLOBAL_HEALTH=='Mala', 1, NA))))))
+
+taula = taula %>% mutate(GLOBAL_HEALTH_F = ifelse(GLOBAL_HEALTH_F=='Excelente', 5, 
+                                                ifelse(GLOBAL_HEALTH_F=='Bastente buena', 4, 
+                                                       ifelse(GLOBAL_HEALTH_F=='Buena', 3, 
+                                                              ifelse(GLOBAL_HEALTH_F=='Regular', 2,
+                                                                     ifelse(GLOBAL_HEALTH_F=='Mala', 1, NA))))))
+
+taula[, global_health_change := fifelse(GLOBAL_HEALTH == GLOBAL_HEALTH_F, 0, 
+                                        fifelse(GLOBAL_HEALTH < GLOBAL_HEALTH_F, 1, -1))]
+taula[, global_health_change := factor(global_health_change, levels = c(0, -1, 1))]
+# Remove missing values
+taula_clean <- taula[!is.na(GLOBAL_HEALTH) & !is.na(GLOBAL_HEALTH_F) & !is.na(SENTINEL_F)]
+
+
+multinom_model_change <- multinom(global_health_change ~ SENTINEL_F, data = taula_clean)
+
+# Summary of the multinomial logistic model
+summary(multinom_model_change)
+
+# Get the odds ratios for the multinomial model
+exp(coef(multinom_model_change))
+
+taula[, .N, keyby=.(global_health_change, SENTINEL_F)]
+```

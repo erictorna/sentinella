@@ -58,9 +58,9 @@ variables_test = c('Midtgaard1',  'Midtgaard2',  'Midtgaard3',  'Midtgaard5',  '
                   'PHQ1', 'PHQ2', 'PHQ3', 'PHQ4', 'PHQ5', 'PHQ6', 'PHQ7', 'PHQ8', 'PHQ9',
                   'GAD1', 'GAD2', 'GAD3', 'GAD4', 'GAD5', 'GAD6', 'GAD7',
                   'SMBM1', 'SMBM2', 'SMBM3', 'SMBM4', 'SMBM5', 'SMBM6', 'SMBM7', 'SMBM8', 'SMBM9', 'SMBM10', 'SMBM11', 'SMBM12', 'SMBM13', 'SMBM14')
-variables_socia = c('Midtgaard1', 'SENTINEL', 'SEX', 'SEXUAL ORIENTATION', 'LIVING SITUATION', 'RELATIONSHIP', 'EMPLOYMENT', 'FINANCING', 'CCAA', 
+variables_socia = c('SENTINEL', 'SEX', 'SEXUAL ORIENTATION', 'LIVING SITUATION', 'RELATIONSHIP', 'EMPLOYMENT', 'FINANCING', 'CCAA', 
                     'HEALTHCARE WORKING PARENTS', 'YEAR', 'PHSYCHIATRY', 'GLOBAL HEALTH')
-variables_test_num = c('Midtgaard_total', 'AUDIT_total', 'MAAS_score', 'PHQ_score', 'GAD_score', 'SMBM_mean')
+variables_test_num = c('Midtgaard_total', 'AUDIT_total', 'MAAS_score', 'PHQ_score', 'GAD_score', 'SMBM_mean', 'OSS_total')
 ```
 
 * Variance Inflation Factors test to know which variables have the highest multicollinearity for the regression analysis
