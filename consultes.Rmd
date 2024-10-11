@@ -1,0 +1,79 @@
+---
+title: "Meetings"
+date: "2024-10-01"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+  pdf_document:
+    toc: yes
+---
+
+```{r libraries, include = FALSE}
+library(data.table)
+library(tidyverse)
+library(kableExtra)
+library(gridExtra)
+library(ggplot2)
+library(scales)
+library(car)
+library(knitr)
+library(nnet)
+library(haven)
+load('/home/idiap/projects/TFG_sentinella/dades.RData')
+
+variables_test_num = c('Midtgaard_total', 'AUDIT_total', 'MAAS_score', 'PHQ_score', 'GAD_score', 'SMBM_mean', 'OSS_total')
+taula$PHQ_score_F<-taula$PHQ_score_S
+taula$GLOBAL_HEALTH<-taula$`GLOBAL HEALTH`
+taula$GLOBAL_HEALTH_F<-taula$`GLOBAL HEALTH_F`
+taula$SENTINEL_CONSULT<-taula$`SENTINEL CONSULT`
+taula$SENTINEL_MEETINGS<-taula$`SENTINEL MEETINGS`
+```
+
+# Consultes
+
+```{r}
+model_summaries <- list()
+for (var in variables_test_num) {
+  pre_var <- var
+  post_var <- paste0(var, "_F")
+  taula[, paste0(var, "_change") := get(post_var) - get(pre_var)]
+  taula_clean <- taula[!is.na(get(pre_var)) & !is.na(get(post_var)) & !is.na(SENTINEL_F)]
+  model <- lm(get(paste0(var, "_change")) ~ SENTINEL_CONSULT, data = taula_clean)
+  modelfinal = Anova(model, type = "II")
+  print(var)
+  print(modelfinal)
+  cat('\n')
+  cat('--------------------------------------------------------')
+  cat('\n')
+  cat('\n')
+  cat('\n')
+  cat('\n')
+  cat('\n')
+  cat('\n')
+}
+```
+
+# Meetings
+
+```{r}
+model_summaries <- list()
+for (var in variables_test_num) {
+  pre_var <- var
+  post_var <- paste0(var, "_F")
+  taula[, paste0(var, "_change") := get(post_var) - get(pre_var)]
+  taula_clean <- taula[!is.na(get(pre_var)) & !is.na(get(post_var)) & !is.na(SENTINEL_F)]
+  model <- lm(get(paste0(var, "_change")) ~ SENTINEL_MEETINGS, data = taula_clean)
+  modelfinal = Anova(model, type = "II")
+  print(var)
+  print(modelfinal)
+  cat('\n')
+  cat('--------------------------------------------------------')
+  cat('\n')
+  cat('\n')
+  cat('\n')
+  cat('\n')
+  cat('\n')
+  cat('\n')
+}
+```

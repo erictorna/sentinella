@@ -17,3 +17,5 @@ output:
 * Efecte Sentinella[[html]](accio_sentinella.html)
 
 * Correlacions salut global[[html]](global_health.html)
+
+* Consultes sentinella [[html]](consultes.html)
