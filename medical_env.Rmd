@@ -1,0 +1,59 @@
+---
+title: "Medical_env"
+date: "2024-10-01"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+  pdf_document:
+    toc: yes
+---
+
+```{r libraries, include = FALSE}
+library(data.table)
+library(tidyverse)
+library(kableExtra)
+library(gridExtra)
+library(ggplot2)
+library(scales)
+library(knitr)
+library(car)
+library(nnet)
+library(haven)
+load('/home/idiap/projects/TFG_sentinella/dades.RData')
+
+taula$PHQ_score_F<-taula$PHQ_score_S
+taula$MEDICAL_SCHOOL_ENVIRONMENT<-as.numeric(taula$`MEDICAL SCHOOL ENVIRONMENT`)
+taula$MEDICAL_SCHOOL_ENVIRONMENT_F<-as.numeric(taula$`MEDICAL SCHOOL ENVIRONMENT_F`)
+taula[, medical_change := fifelse(MEDICAL_SCHOOL_ENVIRONMENT == MEDICAL_SCHOOL_ENVIRONMENT_F, 0, 
+                                        fifelse(MEDICAL_SCHOOL_ENVIRONMENT < MEDICAL_SCHOOL_ENVIRONMENT_F, 1, -1))]
+taula[, medical_change := factor(medical_change, levels = c(0, -1, 1))]
+
+variables_test_num = c('Midtgaard_total', 'AUDIT_total', 'MAAS_score', 'PHQ_score', 'GAD_score', 'SMBM_mean', 'OSS_total', 'DAST1', 'MENTAL_HEALTH_DIAGNOSIS', 'MENTAL_HEALTH_TREATMENT')
+taula$PHQ_score_F<-taula$PHQ_score_S
+```
+
+# Consultes
+
+```{r, warning=FALSE}
+model_summaries <- list()
+for (var in variables_test_num) {
+  pre_var <- var
+  post_var <- paste0(var, "_F")
+  taula[, paste0(var, "_change") := get(post_var) - get(pre_var)]
+  taula_clean <- taula[!is.na(get(pre_var)) & !is.na(get(post_var)) & !is.na(medical_change)]
+  model <- lm(get(paste0(var, "_change")) ~ medical_change, data = taula_clean)
+  modelfinal = Anova(model, type = "II")
+  print(var)
+  print(summary(model))
+  print(modelfinal)
+  cat('\n')
+  cat('--------------------------------------------------------')
+  cat('\n')
+  cat('\n')
+  cat('\n')
+  cat('\n')
+  cat('\n')
+  cat('\n')
+}
+```

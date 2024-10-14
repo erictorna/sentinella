@@ -21,6 +21,7 @@ load('/home/idiap/projects/TFG_sentinella/dades.RData')
 taula$PHQ_score_F<-taula$PHQ_score_S
 taula$GLOBAL_HEALTH<-taula$`GLOBAL HEALTH`
 taula$GLOBAL_HEALTH_F<-taula$`GLOBAL HEALTH_F`
+taula$LIVING_SITUATION<-taula$`LIVING SITUATION`
 
 # variables_socia = c('SEX', 'SEXUAL ORIENTATION', 'LIVING SITUATION', 'RELATIONSHIP', 'EMPLOYMENT', 'FINANCING', 'CCAA', 
                     # 'HEALTHCARE WORKING PARENTS', 'YEAR', 'PHSYCHIATRY', 'GLOBAL HEALTH')
@@ -28,7 +29,42 @@ taula$GLOBAL_HEALTH_F<-taula$`GLOBAL HEALTH_F`
 
 ```{r, warning=FALSE}
 # variables a ajuntar (provisionals)
-variables_socia = c('SEX', 'RELATIONSHIP', 'EMPLOYMENT', 'FINANCING', 'CCAA', 'YEAR', 'PHSYCHIATRY')
+variables_socia = c('SEX', 'RELATIONSHIP', 'EMPLOYMENT', 'FINANCING', 'CCAA', 'YEAR', 'PHSYCHIATRY', 'LIVING_SITUATION')
+
+# Convert SENTINEL_F to factor if it's not already
+taula[, SENTINEL_F := factor(SENTINEL_F, levels = c('No', 'Sí'))]
+
+# Initialize an empty list to store results
+chi_squared_results <- list()
+
+# Perform Chi-squared test for each variable
+for (var in variables_socia) {
+  # Create a contingency table for each variable with SENTINEL_F
+  contingency_table <- table(taula[[var]], taula$SENTINEL_F)
+  
+  # Perform Chi-squared test
+  chi_test <- chisq.test(contingency_table)
+  
+  # Store the test result (statistic, p-value)
+  chi_squared_results[[var]] <- list(
+    statistic = chi_test$statistic,
+    p_value = chi_test$p.value
+  )
+}
+
+# Convert the list of results to a data.table for easier interpretation
+chi_squared_summary <- rbindlist(lapply(chi_squared_results, as.data.table), idcol = "variable")
+
+# Sort by Chi-squared statistic or p-value (lower p-values mean more dispersion)
+chi_squared_summary <- chi_squared_summary[order(p_value)]
+
+# Show the summary sorted by p-value
+print(chi_squared_summary)
+
+```
+
+```{r, warning=FALSE}
+variables_socia = c('RELATIONSHIP', 'EMPLOYMENT', 'YEAR', 'PHSYCHIATRY')
 
 # convertim aquestes variables en factors per si de cas alguna estigues com a numerica
 taula[, (variables_socia) := lapply(.SD, as.factor), .SDcols = variables_socia]
@@ -36,9 +72,10 @@ taula[, (variables_socia) := lapply(.SD, as.factor), .SDcols = variables_socia]
 # Eliminem la gent que té missings, ja que sinó no es pot produir el matching
 # 182 obs -> 163 obs
 taula_clean <- na.omit(taula, cols = variables_socia)
+taula_clean <- na.omit(taula_clean, cols = 'SENTINEL_F')
 
 # Fórmula del procés
-matching_formula <- as.formula(paste("SENTINEL ~", paste(variables_socia, collapse = " + ")))
+matching_formula <- as.formula(paste("SENTINEL_F ~", paste(variables_socia, collapse = " + ")))
 
 match_data <- matchit(matching_formula, data = taula_clean, method = "nearest", distance = "logit", ratio = 1)
 
@@ -53,11 +90,11 @@ love.plot(match_data, stat = "mean.diffs", abs = TRUE, threshold = 0.1)
 ```
 
 ```{r}
-variables_test_num = c('Midtgaard_total', 'AUDIT_total', 'MAAS_score', 'PHQ_score', 'GAD_score', 'SMBM_mean', 'OSS_total')
+variables_test_num = c('Midtgaard_total', 'AUDIT_total', 'MAAS_score', 'PHQ_score', 'GAD_score', 'SMBM_mean', 'OSS_total', 'DAST1', 'MENTAL_HEALTH_DIAGNOSIS', 'MENTAL_HEALTH_TREATMENT')
 ```
 
 
-```{r}
+```{r, warning=FALSE}
 model_summaries <- list()
 
 for (var in variables_test_num) {
@@ -93,8 +130,9 @@ for (var in variables_test_num) {
 }
 ```
 
+# Global Health
+
 ```{r, warning=FALSE}
-# Create a categorical change variable (e.g., 0 = no change, 1 = improvement, -1 = deterioration)
 matched_data = matched_data %>% mutate(GLOBAL_HEALTH = ifelse(GLOBAL_HEALTH=='Excelente', 5, 
                                                 ifelse(GLOBAL_HEALTH=='Bastente buena', 4, 
                                                        ifelse(GLOBAL_HEALTH=='Buena', 3, 
@@ -107,6 +145,7 @@ matched_data = matched_data %>% mutate(GLOBAL_HEALTH_F = ifelse(GLOBAL_HEALTH_F=
                                                               ifelse(GLOBAL_HEALTH_F=='Regular', 2,
                                                                      ifelse(GLOBAL_HEALTH_F=='Mala', 1, NA))))))
 
+# Create a categorical change variable (e.g., 0 = no change, 1 = improvement, -1 = deterioration)
 matched_data[, global_health_change := fifelse(GLOBAL_HEALTH == GLOBAL_HEALTH_F, 0, 
                                         fifelse(GLOBAL_HEALTH < GLOBAL_HEALTH_F, 1, -1))]
 matched_data[, global_health_change := factor(global_health_change, levels = c(0, -1, 1))]

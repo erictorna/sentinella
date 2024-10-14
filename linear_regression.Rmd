@@ -39,45 +39,55 @@ matching_columns <- intersect(cleaned_taulapost_columns, taulapre_columns)
 taula_pre <- taula %>% select(all_of(matching_columns))
 setnames(taula_post, gsub("_F$|_S$|_s$", "", names(taula_post)))
 
-taula_pre2 = taula_pre %>% mutate(MAAS_score = round(as.numeric(MAAS_score),0)) %>% 
-  mutate(PHYSICAL_FATIGUE = round(as.numeric(PHYSICAL_FATIGUE),0)) %>% 
-  mutate(COGNITIVE_FATIGUE = round(as.numeric(COGNITIVE_FATIGUE),0)) %>% 
-  mutate(SMBM_mean = round(as.numeric(SMBM_mean),0)) %>% 
-  mutate(EMOTIONAL_EXAHUSTION = round(as.numeric(EMOTIONAL_EXAHUSTION),0))
-
-taula_post2 = taula_post %>% mutate(MAAS_score = round(as.numeric(MAAS_score),0)) %>% 
-  mutate(PHYSICAL_FATIGUE = round(as.numeric(PHYSICAL_FATIGUE),0)) %>% 
-  mutate(COGNITIVE_FATIGUE = round(as.numeric(COGNITIVE_FATIGUE),0)) %>% 
-  mutate(SMBM_mean = round(as.numeric(SMBM_mean),0)) %>% 
-  mutate(EMOTIONAL_EXAHUSTION = round(as.numeric(EMOTIONAL_EXAHUSTION),0))
-
-variables_test = c('Midtgaard1',  'Midtgaard2',  'Midtgaard3',  'Midtgaard5',  'Midtgaard6',  'Midtgaard7',  'Midtgaard8',  'Midtgaard9', 'Midtgaard10',  'Midtgaard11',  'Midtgaard12',  'Midtgaard13',
-                  'MHS KNOWLEDGE', 'MHS1 ACCESS', 'MHS2 ACCESS', 'MHS3 ACCESS', 'MHS4 ACCESS', 'MHS5 ACCESS', 'MHS6 ACCESS',
-                  'OSS1', 'OSS2', 'OSS3', 'AUDIT1', 'AUDIT2', 'AUDIT3', 
-                  'MAAS1', 'MAAS2', 'MAAS3', 'MAAS4', 'MAAS5', 'MAAS6', 'MAAS7', 'MAAS8', 'MAAS9', 'MAAS10', 'MAAS11', 'MAAS12', 'MAAS13', 'MAAS14', 'MAAS15',
-                  'PHQ1', 'PHQ2', 'PHQ3', 'PHQ4', 'PHQ5', 'PHQ6', 'PHQ7', 'PHQ8', 'PHQ9',
-                  'GAD1', 'GAD2', 'GAD3', 'GAD4', 'GAD5', 'GAD6', 'GAD7',
-                  'SMBM1', 'SMBM2', 'SMBM3', 'SMBM4', 'SMBM5', 'SMBM6', 'SMBM7', 'SMBM8', 'SMBM9', 'SMBM10', 'SMBM11', 'SMBM12', 'SMBM13', 'SMBM14')
-variables_socia = c('SENTINEL', 'SEX', 'SEXUAL ORIENTATION', 'LIVING SITUATION', 'RELATIONSHIP', 'EMPLOYMENT', 'FINANCING', 'CCAA', 
-                    'HEALTHCARE WORKING PARENTS', 'YEAR', 'PHSYCHIATRY', 'GLOBAL HEALTH')
-variables_test_num = c('Midtgaard_total', 'AUDIT_total', 'MAAS_score', 'PHQ_score', 'GAD_score', 'SMBM_mean', 'OSS_total')
+variables_test_num = c('PHQ_score', 'GAD_score', 'SMBM_mean')
+variables_test_num2 = c('Midtgaard_total', 'AUDIT_total', 'MAAS_score', 'OSS_total', 'DAST1')
 ```
 
 * Variance Inflation Factors test to know which variables have the highest multicollinearity for the regression analysis
 
 ```{r, echo=FALSE}
 taula2 = taula %>% mutate(nova = taula_post$Midtgaard_total-taula_pre$Midtgaard_total)
-  model = lm(taula2$nova ~ taula$SENTINEL + taula$SEX + taula$`SEXUAL ORIENTATION` + taula$`LIVING SITUATION` + taula$RELATIONSHIP + taula$FINANCING + taula$CCAA + taula$`HEALTHCARE WORKING PARENTS`+ taula$PHSYCHIATRY+ taula$AGE + taula$YEAR)
+  model = lm(taula2$nova ~ taula$SENTINEL + taula$SEX + taula$`SEXUAL ORIENTATION` + taula$`LIVING SITUATION` + taula$RELATIONSHIP + taula$FINANCING + taula$CCAA + taula$`HEALTHCARE WORKING PARENTS`+ taula$PHSYCHIATRY+ taula$AGE + taula$YEAR + taula$GENDER + taula$EMPLOYMENT + taula$midtgaard_change + taula$audit_change + taula$oss_change + taula$DAST1_change + taula$PHQ_change + taula$GAD_change +
+               taula$SMBM_change + taula$MENTAL_HEALTH_DIAGNOSIS_change + taula$MENTAL_HEALTH_TREATMENT_change + taula$MENTAL_HEALTH_FAMILY_HISTORY + taula$`SENTINEL CONSULT` + taula$`SENTINEL MEETINGS` + taula$`MENTAL HEALTH USEFULNESS` + taula$`WELLBEING USEFULNESS`)
   vif(model)
 ```
 
-* Models
+* Resultat després d'eliminar les variables amb més colinearitat
+
+```{r, echo=FALSE}
+taula2 = taula %>% mutate(nova = taula_post$Midtgaard_total-taula_pre$Midtgaard_total)
+  model = lm(taula2$nova ~ taula$SENTINEL + taula$`SEXUAL ORIENTATION` + taula$`LIVING SITUATION` + taula$RELATIONSHIP + taula$FINANCING + taula$CCAA + taula$`HEALTHCARE WORKING PARENTS`+ taula$PHSYCHIATRY + taula$GENDER + taula$EMPLOYMENT + taula$midtgaard_change + taula$audit_change + taula$oss_change + taula$DAST1_change + taula$PHQ_change + taula$GAD_change + taula$SMBM_change  + taula$MENTAL_HEALTH_DIAGNOSIS_change + taula$MENTAL_HEALTH_FAMILY_HISTORY + taula$`MENTAL HEALTH USEFULNESS` + taula$`WELLBEING USEFULNESS`)
+  vif(model)
+```
+
+* Models per PHQ, GAD i SMBM
 
 ```{r, warning=FALSE}
 for (i in variables_test_num) {
   print(i)
   taula2 = taula %>% mutate(nova = taula_post[[i]]-taula_pre[[i]]) # Creem variable nova que sigui la diferència entre el post i el pre
-  model = lm(taula2$nova ~ taula$SENTINEL + taula$SEX + taula$`SEXUAL ORIENTATION` + taula$`LIVING SITUATION` + taula$RELATIONSHIP + taula$FINANCING + taula$CCAA + taula$`HEALTHCARE WORKING PARENTS`+ taula$PHSYCHIATRY) # Eliminem edat i curs ja que eren les variables amb més multicolinearitat
+  model = lm(taula2$nova ~ taula$SENTINEL + taula$GENDER + taula$`SEXUAL ORIENTATION` + taula$`LIVING SITUATION` + taula$RELATIONSHIP + taula$FINANCING + taula$CCAA + taula$`HEALTHCARE WORKING PARENTS`+ taula$PHSYCHIATRY + taula$EMPLOYMENT + taula$midtgaard_change + taula$audit_change + taula$oss_change + taula$DAST1_change + taula$MENTAL_HEALTH_DIAGNOSIS_change + taula$MENTAL_HEALTH_FAMILY_HISTORY + taula$`MENTAL HEALTH USEFULNESS` + taula$`WELLBEING USEFULNESS`) # Eliminem edat, curs, sexe ja que eren les variables amb més multicolinearitat
+  modelfinal = Anova(model, type = "II")
+  print(modelfinal)
+  cat('\n')
+  cat('--------------------------------------------------------')
+  cat('\n')
+  cat('\n')
+  cat('\n')
+  cat('\n')
+  cat('\n')
+  cat('\n')
+}
+
+```
+
+* Resta de models
+
+```{r, warning=FALSE}
+for (i in variables_test_num2) {
+  print(i)
+  taula2 = taula %>% mutate(nova = taula_post[[i]]-taula_pre[[i]]) # Creem variable nova que sigui la diferència entre el post i el pre
+  model = lm(taula2$nova ~ taula$SENTINEL + taula$GENDER + taula$`SEXUAL ORIENTATION` + taula$`LIVING SITUATION` + taula$RELATIONSHIP + taula$FINANCING + taula$CCAA + taula$`HEALTHCARE WORKING PARENTS`+ taula$PHSYCHIATRY + taula$EMPLOYMENT + taula$MENTAL_HEALTH_DIAGNOSIS_change + taula$MENTAL_HEALTH_FAMILY_HISTORY + taula$`MENTAL HEALTH USEFULNESS` + taula$`WELLBEING USEFULNESS`) # Eliminem edat, curs, sexe ja que eren les variables amb més multicolinearitat
   modelfinal = Anova(model, type = "II")
   print(modelfinal)
   cat('\n')

@@ -19,3 +19,5 @@ output:
 * Correlacions salut global[[html]](global_health.html)
 
 * Consultes sentinella [[html]](consultes.html)
+
+* Ambient mèdic [[html]](medical_env.html)

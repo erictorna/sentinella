@@ -1,5 +1,5 @@
 ---
-title: "Meetings"
+title: "Meetings-consultes"
 date: "2024-10-01"
 output:
   html_document:
@@ -22,7 +22,7 @@ library(nnet)
 library(haven)
 load('/home/idiap/projects/TFG_sentinella/dades.RData')
 
-variables_test_num = c('Midtgaard_total', 'AUDIT_total', 'MAAS_score', 'PHQ_score', 'GAD_score', 'SMBM_mean', 'OSS_total')
+variables_test_num = c('Midtgaard_total', 'AUDIT_total', 'MAAS_score', 'PHQ_score', 'GAD_score', 'SMBM_mean', 'OSS_total', 'DAST1', 'MENTAL_HEALTH_DIAGNOSIS', 'MENTAL_HEALTH_TREATMENT')
 taula$PHQ_score_F<-taula$PHQ_score_S
 taula$GLOBAL_HEALTH<-taula$`GLOBAL HEALTH`
 taula$GLOBAL_HEALTH_F<-taula$`GLOBAL HEALTH_F`
@@ -42,6 +42,7 @@ for (var in variables_test_num) {
   model <- lm(get(paste0(var, "_change")) ~ SENTINEL_CONSULT, data = taula_clean)
   modelfinal = Anova(model, type = "II")
   print(var)
+  print(summary(model))
   print(modelfinal)
   cat('\n')
   cat('--------------------------------------------------------')
@@ -66,6 +67,7 @@ for (var in variables_test_num) {
   model <- lm(get(paste0(var, "_change")) ~ SENTINEL_MEETINGS, data = taula_clean)
   modelfinal = Anova(model, type = "II")
   print(var)
+  print(summary(model))
   print(modelfinal)
   cat('\n')
   cat('--------------------------------------------------------')
